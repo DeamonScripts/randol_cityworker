@@ -64,14 +64,18 @@ Config.Sectors = {
         blackoutThreshold = 10
     }
 }
-
-Command,Permission,Description
-/workstatus,Everyone,Check your current rank and job stats
-/controlroom,Foreman+,Open the HQ grid management dashboard
-/setsectorhealth [id] [amount],Admin,Force set a sector's health percentage
-/reportdamage,Everyone,Report infrastructure damage to dispatch
-
-Credits
+```
+### Exports
+## Server
+```Lua
+exports['dps-cityworker']:GetSectorHealth(sectorId)
+exports['dps-cityworker']:TriggerBlackout(sectorId)
+exports['dps-cityworker']:GetPlayerSeniority(source)
+```
+## Command,Permission,Description
+/workstatusEveryoneCheck your current rank and job stats/controlroomForeman+Open the HQ grid management dashboard/setsectorhealth [id] [amount]AdminForce set a sector's health percentage/reportdamageEveryoneReport infrastructure damage to dispatch
+```
+## Credits
 DPS Development Team (Maintainer & Expansion)
 
 Randol (Original Script Creator)
