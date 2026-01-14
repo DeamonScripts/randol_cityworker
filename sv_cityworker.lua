@@ -1,4 +1,5 @@
 local Config = lib.require('config')
+local Server = lib.require('sv_config')
 local Players = {}
 local SectorHealth = {} -- Runtime cache for Grid Health
 
@@ -61,13 +62,16 @@ end
 -- CORE JOB LOGIC
 --------------------------------------------------------------------------------
 local function createWorkVehicle(source)
-    -- Add logic here to check Rank and spawn better trucks for higher ranks
-    local spawn = Config.BossCoords -- Fallback
-    -- You would likely want a dedicated spawn point vector in Config
-    local veh = CreateVehicle(Config.BossModel, 893.0, -2339.0, 30.0, 0.0, true, true) -- Temp coords near boss
+    local spawn = Server.VehicleSpawn
+    local model = Server.Vehicle
+
+    -- Create vehicle at the specific coordinates from sv_config
+    local veh = CreateVehicle(model, spawn.x, spawn.y, spawn.z, spawn.w, true, true)
+    
     local ped = GetPlayerPed(source)
     while not DoesEntityExist(veh) do Wait(10) end 
     TaskWarpPedIntoVehicle(ped, veh, -1)
+    
     return NetworkGetNetworkIdFromEntity(veh)
 end
 
@@ -77,14 +81,8 @@ lib.callback.register('dps-cityworker:server:spawnVehicle', function(source)
     local src = source
     local netid = createWorkVehicle(src)
     
-    -- Pick a random location from a hardcoded list or Config
-    -- Ideally, move Server.Locations to Config.Locations
-    local locations = {
-        vec3(-58.0, -1008.0, 28.0), -- Legion
-        vec3(1157.0, -423.0, 67.0), -- Mirror Park
-        vec3(264.0, -1263.0, 29.0), -- Strawberry
-    }
-    local newDelivery = locations[math.random(#locations)]
+    -- Pick a random location from the long list in sv_config
+    local newDelivery = Server.Locations[math.random(#Server.Locations)]
     
     -- Load Player Stats
     local stats = GetPlayerStats(src)
@@ -112,7 +110,6 @@ end)
 
 lib.callback.register('dps-cityworker:server:Payment', function(source)
     local src = source
-    local Player = GetPlayer(src) -- Requires QBCore/ESX helper bridge technically
     local ped = GetPlayerPed(src)
     local pos = GetEntityCoords(ped)
 
@@ -152,13 +149,10 @@ lib.callback.register('dps-cityworker:server:Payment', function(source)
 
     -- 5. Assign Next Task
     CreateThread(function()
-        Wait(2000)
-        local locations = {
-            vec3(-58.0, -1008.0, 28.0),
-            vec3(1157.0, -423.0, 67.0),
-            vec3(264.0, -1263.0, 29.0),
-        }
-        local newDelivery = locations[math.random(#locations)]
+        Wait(Server.Timeout)
+        
+        -- Generate next random location from sv_config list
+        local newDelivery = Server.Locations[math.random(#Server.Locations)]
         Players[src].location = newDelivery
         
         TriggerClientEvent("dps-cityworker:client:generatedLocation", src, Players[src])
